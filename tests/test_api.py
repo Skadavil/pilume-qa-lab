@@ -63,3 +63,23 @@ def test_switch_off():
     assert response.status_code == 200
     assert result["power"] is False
     assert result["brightness"] == 0
+
+
+def test_light_command_creates_event():
+	events_before = client.get("/api/events").json()
+	
+	command = {
+	    "brightness": 75,
+	    "red": 20,
+	    "green": 40,
+	    "blue":60,
+	}
+	response = client.post("/api/light", json=command)
+	events_after = client.get("/api/events").json()
+	latest_event = events_after[-1]
+	
+	assert response.status_code == 200
+	assert len(events_after) == len(events_before)+1
+	assert latest_event["action"] == "set_light"
+	assert latest_event["timestamp"]
+	assert latest_event["state"]["brightness"] == 75

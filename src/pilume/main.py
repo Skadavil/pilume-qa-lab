@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from pydantic import BaseModel, Field
+from pilume.event_log import read_events, record_event
 
 app = FastAPI(
     title="PiLume QA Lab",
@@ -41,6 +42,7 @@ def get_status():
 def set_light(command: LightCommand):
     light_state.update(command.model_dump())
     light_state["power"] = command.brightness > 0
+    record_event("set_light",light_state)
     return light_state
 
 
@@ -48,4 +50,9 @@ def set_light(command: LightCommand):
 def switch_off():
     light_state["power"] = False
     light_state["brightness"] = 0
+    record_event("switch_off",light_state)
     return light_state
+
+@app.get("/api/events")
+def get_events():
+    return read_events()
